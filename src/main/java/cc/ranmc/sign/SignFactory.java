@@ -72,10 +72,9 @@ public final class SignFactory {
         public void open(Player player) {
             Objects.requireNonNull(player, "player");
             if (!player.isOnline()) return;
-            Location location = player.getLocation().clone();
-            location.setY(location.getBlockY() - 4);
+            Location location = player.getLocation().clone().add(0, -4, 0);
             player.sendBlockChange(location, Material.CHERRY_SIGN.createBlockData());
-            player.sendSignChange(location, text.toArray(new String[4]));
+            player.sendSignChange(location, text.toArray(new String[3]));
             PacketContainer openSign = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.OPEN_SIGN_EDITOR);
             position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
             openSign.getBlockPositionModifier().write(0, position);
