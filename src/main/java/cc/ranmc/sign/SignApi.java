@@ -27,11 +27,11 @@ public class SignApi extends JavaPlugin implements Listener {
     }
 
     public static SignFactory.Menu newMenu(String text) {
-        return SignApi.getInstance().getFactory().newMenu(Arrays.asList(text, "", "", ""));
+        return SignApi.getFactory().newMenu(Arrays.asList(text, "", "", ""));
     }
 
     public SignFactory.Menu newMenu(List<String> text) {
-        return SignApi.getInstance().getFactory().newMenu(text);
+        return SignApi.getFactory().newMenu(text);
     }
 
 

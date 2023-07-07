@@ -3,23 +3,43 @@ package cc.ranmc.sign;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.BlockPosition;
+import net.minecraft.core.BlockPosition;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
+import net.minecraft.network.protocol.game.PacketPlayOutTileEntityData;
+import net.minecraft.server.network.PlayerConnection;
+import net.minecraft.world.level.block.entity.TileEntityTypes;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import net.minecraft.network.protocol.game.PacketPlayOutOpenSignEditor;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 
-public final class SignFactory {
+import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
+
+final class SignFactory {
     private final SignApi plugin;
     private final Map<Player, Menu> inputs = new HashMap<>();
+
+    private static Constructor<PacketPlayOutTileEntityData> constructor;
+
+    static {
+        try {
+            constructor = PacketPlayOutTileEntityData.class.getDeclaredConstructor(BlockPosition.class, TileEntityTypes.class, NBTTagCompound.class);
+            constructor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+    }
 
     public SignFactory(SignApi plugin) {
         this.plugin = plugin;
@@ -30,11 +50,10 @@ public final class SignFactory {
         return new SignFactory.Menu(text);
     }
 
-
     private void listen() {
         ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(plugin, PacketType.Play.Client.UPDATE_SIGN) {
             @Override
-            public void onPacketReceiving(PacketEvent event) {
+            public void onPacketReceiving(com.comphenix.protocol.events.PacketEvent event) {
                 Player player = event.getPlayer();
 
                 Menu menu = inputs.remove(player);
@@ -49,8 +68,7 @@ public final class SignFactory {
                 if (!success) Bukkit.getScheduler().runTaskLater(plugin, () -> menu.open(player), 2L);
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     if (player.isOnline()) {
-                        Location location = menu.position.toLocation(player.getWorld());
-                        player.sendBlockChange(location, location.getBlock().getBlockData());
+                        player.sendBlockChange(menu.location, menu.location.getBlock().getBlockData());
                     }
                 }, 2L);
             }
@@ -61,7 +79,7 @@ public final class SignFactory {
 
         private final List<String> text;
         private BiPredicate<Player, String[]> response;
-        private BlockPosition position;
+        private Location location;
         Menu(List<String> text) {
             this.text = text;
         }
@@ -72,13 +90,42 @@ public final class SignFactory {
         public void open(Player player) {
             Objects.requireNonNull(player, "player");
             if (!player.isOnline()) return;
-            Location location = player.getLocation().clone().add(0, -4, 0);
-            player.sendBlockChange(location, Material.CHERRY_SIGN.createBlockData());
-            player.sendSignChange(location, text.toArray(new String[3]));
-            PacketContainer openSign = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.OPEN_SIGN_EDITOR);
-            position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-            openSign.getBlockPositionModifier().write(0, position);
-            ProtocolLibrary.getProtocolManager().sendServerPacket(player, openSign);
+            location = player.getLocation().clone().add(0, -4, 0);
+            player.sendBlockChange(location, Material.CHERRY_WALL_SIGN.createBlockData());
+
+            BlockPosition position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+            PacketPlayOutOpenSignEditor editorPacket = new PacketPlayOutOpenSignEditor(position, true);
+
+            NBTTagCompound compound = new NBTTagCompound();
+
+            NBTTagCompound frontText = new NBTTagCompound();
+            NBTTagCompound backText = new NBTTagCompound();
+            NBTTagList backMessages = new NBTTagList();
+            NBTTagList frontMessages = new NBTTagList();
+
+
+            for (String s : text) {
+                NBTTagString nbtString = NBTTagString.a(String.format("{\"text\":\"%s\"}", s));
+                backMessages.add(nbtString);
+                frontMessages.add(nbtString);
+            }
+
+            backText.a("messages", backMessages);
+            frontText.a("messages", frontMessages);
+            compound.a("back_text", backText);
+            compound.a("front_text", frontText);
+
+            PacketPlayOutTileEntityData tileEntityDataPacket = null;
+            try {
+                tileEntityDataPacket = constructor.newInstance(position, TileEntityTypes.h, compound);
+            } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+
+            PlayerConnection connection = ((CraftPlayer) player).getHandle().c;
+
+            connection.a(tileEntityDataPacket);
+            connection.a(editorPacket);
             inputs.put(player, this);
         }
     }
