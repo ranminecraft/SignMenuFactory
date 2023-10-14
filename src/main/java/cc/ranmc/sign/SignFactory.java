@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 
-import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
 
 final class SignFactory {
     private final SignApi plugin;
