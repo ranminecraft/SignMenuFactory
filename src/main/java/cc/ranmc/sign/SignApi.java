@@ -30,7 +30,7 @@ public class SignApi extends JavaPlugin implements Listener {
         return SignApi.getFactory().newMenu(Arrays.asList(text, "", "", ""));
     }
 
-    public SignFactory.Menu newMenu(List<String> text) {
+    public static SignFactory.Menu newMenu(List<String> text) {
         return SignApi.getFactory().newMenu(text);
     }
 

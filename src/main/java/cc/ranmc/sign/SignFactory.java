@@ -32,12 +32,28 @@ final class SignFactory {
 
     private static Constructor<PacketPlayOutTileEntityData> constructor;
 
+    private final boolean folia = isFolia();
+
     static {
         try {
             constructor = PacketPlayOutTileEntityData.class.getDeclaredConstructor(BlockPosition.class, TileEntityTypes.class, NBTTagCompound.class);
             constructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * 是 Folia 端
+     *
+     * @return boolean
+     */
+    public static boolean isFolia() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return true;
+        } catch (ClassNotFoundException ignored) {
+            return false;
         }
     }
 
@@ -64,13 +80,21 @@ final class SignFactory {
                 event.setCancelled(true);
 
                 boolean success = menu.response.test(player, event.getPacket().getStringArrays().read(0));
-
-                if (!success) Bukkit.getScheduler().runTaskLater(plugin, () -> menu.open(player), 2L);
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    if (player.isOnline()) {
-                        player.sendBlockChange(menu.location, menu.location.getBlock().getBlockData());
-                    }
-                }, 2L);
+                if (folia) {
+                    if (!success)  Bukkit.getServer().getGlobalRegionScheduler().runDelayed(plugin, bukkitTask -> menu.open(player), 2L);
+                    Bukkit.getServer().getRegionScheduler().runDelayed(plugin, menu.location, bukkitTask -> {
+                        if (player.isOnline()) {
+                            player.sendBlockChange(menu.location, menu.location.getBlock().getBlockData());
+                        }
+                    }, 2L);
+                } else {
+                    if (!success)  Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> menu.open(player), 2L);
+                    Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> {
+                        if (player.isOnline()) {
+                            player.sendBlockChange(menu.location, menu.location.getBlock().getBlockData());
+                        }
+                    }, 2L);
+                }
             }
         });
     }
