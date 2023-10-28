@@ -17,8 +17,8 @@ public class SignApi extends JavaPlugin implements Listener {
     public void onEnable() {
         Bukkit.getConsoleSender().sendMessage("§e-----------------------");
         Bukkit.getConsoleSender().sendMessage("§bSignMenuFactory §dBy Ranica");
-        Bukkit.getConsoleSender().sendMessage("§bVersion: "+getDescription().getVersion());
-        Bukkit.getConsoleSender().sendMessage("§bBukkit: "+getServer().getVersion());
+        Bukkit.getConsoleSender().sendMessage("§bVersion: " + getDescription().getVersion());
+        Bukkit.getConsoleSender().sendMessage("§bBukkit: " + getServer().getVersion());
         Bukkit.getConsoleSender().sendMessage("§chttps://www.ranmc.cc/");
         Bukkit.getConsoleSender().sendMessage("§e-----------------------");
         instance = this;
