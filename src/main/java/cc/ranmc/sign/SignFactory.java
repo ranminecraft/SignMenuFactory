@@ -3,6 +3,7 @@ package cc.ranmc.sign;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketContainer;
 import net.minecraft.core.BlockPosition;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -25,6 +26,7 @@ import java.util.Objects;
 import java.util.function.BiPredicate;
 
 import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
+import org.jetbrains.annotations.NotNull;
 
 final class SignFactory {
     private final SignApi plugin;
@@ -111,14 +113,13 @@ final class SignFactory {
             this.response = response;
             return this;
         }
-        public void open(Player player) {
-            Objects.requireNonNull(player, "player");
+        public void open(@NotNull Player player) {
             if (!player.isOnline()) return;
             location = player.getLocation().clone().add(0, -4, 0);
             player.sendBlockChange(location, Material.CHERRY_WALL_SIGN.createBlockData());
 
             BlockPosition position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-            PacketPlayOutOpenSignEditor editorPacket = new PacketPlayOutOpenSignEditor(position, true);
+            /*PacketPlayOutOpenSignEditor editorPacket = new PacketPlayOutOpenSignEditor(position, true);
 
             NBTTagCompound compound = new NBTTagCompound();
 
@@ -126,7 +127,6 @@ final class SignFactory {
             NBTTagCompound backText = new NBTTagCompound();
             NBTTagList backMessages = new NBTTagList();
             NBTTagList frontMessages = new NBTTagList();
-
 
             for (String s : text) {
                 NBTTagString nbtString = NBTTagString.a(String.format("{\"text\":\"%s\"}", s));
@@ -149,7 +149,12 @@ final class SignFactory {
             PlayerConnection connection = ((CraftPlayer) player).getHandle().c;
 
             connection.a(tileEntityDataPacket);
-            connection.a(editorPacket);
+            connection.a(editorPacket);*/
+
+            PacketContainer openSign = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.OPEN_SIGN_EDITOR);
+            openSign.getBlockPositionModifier().write(0, new com.comphenix.protocol.wrappers.BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+            ProtocolLibrary.getProtocolManager().sendServerPacket(player, openSign);
+
             inputs.put(player, this);
         }
     }
