@@ -9,23 +9,18 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.network.protocol.game.PacketPlayOutTileEntityData;
-import net.minecraft.server.network.PlayerConnection;
 import net.minecraft.world.level.block.entity.TileEntityTypes;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import net.minecraft.network.protocol.game.PacketPlayOutOpenSignEditor;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiPredicate;
 
-import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 
 final class SignFactory {
@@ -118,8 +113,8 @@ final class SignFactory {
             location = player.getLocation().clone().add(0, -4, 0);
             player.sendBlockChange(location, Material.CHERRY_WALL_SIGN.createBlockData());
 
-            BlockPosition position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-            /*PacketPlayOutOpenSignEditor editorPacket = new PacketPlayOutOpenSignEditor(position, true);
+            /*BlockPosition position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+            PacketPlayOutOpenSignEditor editorPacket = new PacketPlayOutOpenSignEditor(position, true);
 
             NBTTagCompound compound = new NBTTagCompound();
 
@@ -127,6 +122,7 @@ final class SignFactory {
             NBTTagCompound backText = new NBTTagCompound();
             NBTTagList backMessages = new NBTTagList();
             NBTTagList frontMessages = new NBTTagList();
+
 
             for (String s : text) {
                 NBTTagString nbtString = NBTTagString.a(String.format("{\"text\":\"%s\"}", s));
@@ -153,9 +149,30 @@ final class SignFactory {
 
             PacketContainer openSign = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.OPEN_SIGN_EDITOR);
             openSign.getBlockPositionModifier().write(0, new com.comphenix.protocol.wrappers.BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+            openSign.getBooleans().write(0, true);
             ProtocolLibrary.getProtocolManager().sendServerPacket(player, openSign);
 
             inputs.put(player, this);
+        }
+
+        @NotNull
+        private NBTTagCompound getNbtTagCompound() {
+            NBTTagCompound compound = new NBTTagCompound();
+
+            NBTTagCompound frontText = new NBTTagCompound();
+            NBTTagCompound backText = new NBTTagCompound();
+            NBTTagList backMessages = new NBTTagList();
+            NBTTagList frontMessages = new NBTTagList();
+
+            for (String s : text) {
+                NBTTagString nbtString = NBTTagString.a(String.format("{\"text\":\"%s\"}", s));
+                backMessages.add(nbtString);
+                frontMessages.add(nbtString);
+            }
+
+            backText.a("messages", backMessages);
+            frontText.a("messages", frontMessages);
+            return compound;
         }
     }
 }
