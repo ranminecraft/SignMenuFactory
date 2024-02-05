@@ -6,11 +6,11 @@
 
     <groupId>cc</groupId>
     <artifactId>SignMenuFactory</artifactId>
-    <version>2.3</version>
+    <version>RELEASE</version>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <build>
